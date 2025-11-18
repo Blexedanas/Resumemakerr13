@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Smart Resume Maker | Shaikh Anas</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+*{box-sizing:border-box;font-family:'Poppins',sans-serif;margin:0;padding:0}
+body{background:#f6f6fa;display:flex;justify-content:center;padding:30px 10px;color:#333}
+.container{max-width:1000px;width:100%;background:#fff;border-radius:16px;box-shadow:0 4px 25px rgba(0,0,0,0.1);overflow:hidden;animation:fadeIn .6s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.form-section{padding:25px;border-bottom:2px solid #eee;display:grid;gap:12px}
+input,textarea{width:100%;padding:10px 14px;border:1px solid #ccc;border-radius:8px;font-size:14px;resize:vertical}
+input:focus,textarea:focus{border-color:#7b2cbf;box-shadow:0 0 4px rgba(123,44,191,0.3);outline:none}
+.btn{border:2px solid #7b2cbf;background:transparent;color:#7b2cbf;padding:10px 18px;font-weight:600;border-radius:10px;cursor:pointer;transition:.3s;margin:5px}
+.btn:hover{background:#7b2cbf;color:#fff;box-shadow:0 4px 12px rgba(123,44,191,0.3)}
+.resume-wrapper{background:#fff;display:flex;justify-content:center;align-items:center;padding:20px}
+.resume{
+  width:794px;
+  min-height:1123px;
+  background:#fff;
+  color:#333;
+  border:1px solid #ddd;
+  padding:40px 55px;
+  overflow:hidden;
+  position:relative;
+  line-height:1.6;
+}
+h1{text-align:center;color:#7b2cbf;font-size:28px;font-weight:700;margin-bottom:6px}
+h2{text-align:center;font-size:16px;color:#666;margin-bottom:4px}
+h3{color:#7b2cbf;margin-top:18px;margin-bottom:6px;text-transform:uppercase;font-size:15px;border-bottom:2px solid #7b2cbf;display:inline-block;padding-bottom:3px}
+.contact{text-align:center;font-size:13px;color:#555;margin-bottom:25px}
+p,li{font-size:14px;line-height:1.5}
+ul{margin:6px 0 12px 20px}
+ul li{list-style-type:disc;margin-bottom:3px}
+.photo{text-align:center;margin-bottom:10px}
+.photo img{width:110px;height:110px;border-radius:50%;object-fit:cover;border:3px solid #7b2cbf;box-shadow:0 0 6px rgba(0,0,0,0.2)}
+.actions{text-align:center;padding:15px}
+@media(max-width:850px){.resume-wrapper{transform:scale(0.8);transform-origin:top center}}
+</style>
+</head>
+
+<body>
+<div class="container">
+  <div class="form-section">
+    <h2 style="text-align:center;color:#7b2cbf;">🧾 Smart Resume Maker</h2>
+    <input type="file" id="photo" accept="image/*">
+    <input type="text" id="name" placeholder="Full Name (e.g. Shaikh Anas)" required>
+    <input type="text" id="title" placeholder="Job Title (e.g. Data Science Student)">
+    <textarea id="contact" placeholder="Contact Info (Phone, Email, LinkedIn)"></textarea>
+    <textarea id="summary" placeholder="Professional Summary"></textarea>
+    <textarea id="experience" placeholder="Work Experience (use bullet points)"></textarea>
+    <textarea id="projects" placeholder="Projects (highlight technologies & outcomes)"></textarea>
+    <textarea id="education" placeholder="Education (Degree • Institution • Year)"></textarea>
+    <textarea id="skills" placeholder="Skills (comma separated)"></textarea>
+    <textarea id="certifications" placeholder="Certifications or Courses"></textarea>
+    <textarea id="languages" placeholder="Languages (comma separated)"></textarea>
+    <textarea id="achievements" placeholder="Achievements or Awards"></textarea>
+    <div style="text-align:center;">
+      <button class="btn" onclick="generateResume()">Preview Resume</button>
+    </div>
+  </div>
+
+  <div id="resumePreview" style="display:none;">
+    <div class="resume-wrapper">
+      <div class="resume" id="resumeContent"></div>
+    </div>
+    <div class="actions">
+      <button class="btn" onclick="downloadPDF()">📄 Download PDF</button>
+      <button class="btn" onclick="downloadImage()">📸 Save as Image</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const { jsPDF } = window.jspdf;
+let imageBase64="";
+
+document.getElementById("photo").addEventListener("change",e=>{
+  const file=e.target.files[0];
+  if(file){
+    const r=new FileReader();
+    r.onload=ev=>imageBase64=ev.target.result;
+    r.readAsDataURL(file);
+  }
+});
+
+function generateResume(){
+  const name=document.getElementById("name").value||"Your Name";
+  const title=document.getElementById("title").value;
+  const contact=document.getElementById("contact").value;
+  const summary=document.getElementById("summary").value;
+  const experience=document.getElementById("experience").value.split('\n').filter(Boolean).map(i=>`<li>${i}</li>`).join('');
+  const projects=document.getElementById("projects").value.split('\n').filter(Boolean).map(i=>`<li>${i}</li>`).join('');
+  const education=document.getElementById("education").value.split('\n').filter(Boolean).map(i=>`<li>${i}</li>`).join('');
+  const skills=document.getElementById("skills").value.split(',').filter(Boolean).map(i=>`<li>${i.trim()}</li>`).join('');
+  const certifications=document.getElementById("certifications").value.split('\n').filter(Boolean).map(i=>`<li>${i}</li>`).join('');
+  const languages=document.getElementById("languages").value.split(',').filter(Boolean).map(i=>`<li>${i.trim()}</li>`).join('');
+  const achievements=document.getElementById("achievements").value.split('\n').filter(Boolean).map(i=>`<li>${i}</li>`).join('');
+  const img=imageBase64?`<div class='photo'><img src='${imageBase64}'></div>`:"";
+
+  const html=`
+    ${img}
+    <h1>${name.toUpperCase()}</h1>
+    <h2>${title}</h2>
+    <div class="contact">${contact.replace(/\n/g,"<br>")}</div>
+
+    ${summary?`<h3>Summary</h3><p>${summary}</p>`:""}
+    ${experience?`<h3>Work Experience</h3><ul>${experience}</ul>`:""}
+    ${projects?`<h3>Projects</h3><ul>${projects}</ul>`:""}
+    ${education?`<h3>Education</h3><ul>${education}</ul>`:""}
+    ${skills?`<h3>Skills</h3><ul>${skills}</ul>`:""}
+    ${certifications?`<h3>Certifications</h3><ul>${certifications}</ul>`:""}
+    ${languages?`<h3>Languages</h3><ul>${languages}</ul>`:""}
+    ${achievements?`<h3>Achievements</h3><ul>${achievements}</ul>`:""}
+  `;
+
+  const resume=document.getElementById("resumeContent");
+  resume.innerHTML=html;
+  document.getElementById("resumePreview").style.display="block";
+  window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});
+}
+
+async function downloadPDF(){
+  const resume=document.getElementById("resumeContent");
+  resume.style.height="auto";
+  const canvas=await html2canvas(resume,{scale:3,useCORS:true,backgroundColor:"#fff"});
+  const imgData=canvas.toDataURL("image/jpeg",1.0);
+  const pdf=new jsPDF('p','mm','a4');
+  const pdfWidth=210;
+  const pdfHeight=(canvas.height*pdfWidth)/canvas.width;
+  pdf.addImage(imgData,'JPEG',0,0,pdfWidth,pdfHeight);
+  const name=document.getElementById("name").value.trim().replace(/\s+/g,"_")||"Resume";
+  pdf.save(`${name}_Resume.pdf`);
+  resume.style.height="";
+}
+
+async function downloadImage(){
+  const resume=document.getElementById("resumeContent");
+  resume.style.height="auto";
+  const canvas=await html2canvas(resume,{scale:3,useCORS:true,backgroundColor:"#fff"});
+  const link=document.createElement('a');
+  const name=document.getElementById("name").value.trim().replace(/\s+/g,"_")||"Resume";
+  link.download=`${name}_Resume.png`;
+  link.href=canvas.toDataURL("image/png");
+  link.click();
+  resume.style.height="";
+}
+</script>
+</body>
+</html>
